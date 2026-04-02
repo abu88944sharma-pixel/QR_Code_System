@@ -94,42 +94,6 @@ def send_password_reset_email(email: str):
     return response.text
 
 
-def get_auth0_roles() -> dict:
-    url = f"https://{AUTH0_DOMAIN}/api/v2/roles"
-
-    response = requests.get(url, headers=_management_headers())
-
-    return {
-        "success": response.ok,
-        "status_code": response.status_code,
-        "data": _safe_json(response),
-    }
-
-
-def remove_all_roles_from_user(user_id: str):
-    token = get_management_token()
-
-    url = f"https://{AUTH0_DOMAIN}/api/v2/users/{user_id}/roles"
-
-    roles = requests.get(
-        url,
-        headers={
-            "Authorization": f"Bearer {token}",
-        },
-    ).json()
-
-    role_ids = [role["id"] for role in roles]
-
-    if role_ids:
-        requests.delete(
-            url,
-            json={"roles": role_ids},
-            headers={
-                "Authorization": f"Bearer {token}",
-            },
-        )
-
-
 def delete_auth0_user(user_id: str):
     token = get_management_token()
 

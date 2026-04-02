@@ -11,7 +11,7 @@ from app.schemas.user import CreateUserRequest
 from app.services.auth0_service import (
     assign_auth0_role_to_user,
     create_auth0_user,
-    get_auth0_roles,
+    delete_auth0_user,
     send_password_reset_email,
 )
 
@@ -268,3 +268,39 @@ def get_roles_service(current_user: dict, db: Session) -> list[dict]:
         for role in roles
         if role.auth0_role_id
     ]
+
+
+def delete_user_service(db: Session, auth0_id: str, current_user: dict):
+    try:
+        db_user = current_user["db_user"]
+        creator_role = db_user.get("role")
+        current_auth0_id = current_user["auth0_id"]
+
+        if creator_role not in ["super_admin", "admin"]:
+            raise HTTPException(status_code=403, detail="Not allowed")
+
+        if auth0_id == current_auth0_id:
+            raise HTTPException(status_code=400, detail="You cannot delete yourself")
+
+        target_user = db.query(User).filter(User.auth0_id == auth0_id).first()
+        if not target_user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        if creator_role == "admin":
+            current_client_id = db_user.get("client_id")
+            if target_user.client_id != current_client_id:
+                raise HTTPException(status_code=403, detail="Not allowed to delete users outside your client scope")
+
+        target_user.is_deleted = True
+        target_user.is_active = False
+
+        delete_auth0_user(auth0_id)
+        
+        db.commit()
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

@@ -14,7 +14,7 @@ from app.services.client_service import (
 )
 from app.utils.helpers import success_response
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1", tags=["Client"])
 
 
 @router.post("/clients")

@@ -8,12 +8,13 @@ from app.db.session import get_db
 from app.schemas.user import CreateUserRequest
 from app.services.user_service import (
     create_user_service,
+    delete_user_service,
     get_roles_service,
     get_users_service,
 )
 from app.utils.helpers import success_response
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1", tags=["User"])
 
 
 @router.get("/me")
@@ -56,3 +57,13 @@ def get_users(
 def get_roles_auth0(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     roles = get_roles_service(current_user, db)
     return success_response("Roles fetched successfully", roles)
+
+
+@router.delete("/users/{auth0_id}")
+def delete_user(
+    auth0_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    delete_user_service(db, auth0_id, current_user)
+    return success_response("User deleted successfully", {})
