@@ -1,0 +1,36 @@
+.env
+.venv/
+venv/
+env/
+
+__pycache__/
+*.py[cod]
+*.pyo
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+.idea/
+.vscode/
+.DS_Store
+
+*.log
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+ 
+# Ignore virtual environment directories
+.venv/
+myenv/
+ 
+#alembic/versions
+ 
+ 
+# Ignore environment variables file
+# .env
