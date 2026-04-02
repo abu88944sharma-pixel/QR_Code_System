@@ -182,7 +182,7 @@ def get_users_service(
         normalized_page = max(page or 1, 1)
 
         query = db.query(User).options(joinedload(User.role), joinedload(User.client))
-        query = query.filter(User.is_deleted == False, User.auth0_id != current_user["auth0_id"])
+        query = query.filter(User.auth0_id != current_user["auth0_id"])
 
         if search:
             query = query.filter(
