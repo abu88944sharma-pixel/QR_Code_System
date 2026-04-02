@@ -1,36 +1,49 @@
+# ----------------------------------
+# ENVIRONMENT AND SECRETS
+# ----------------------------------
 .env
+.env.local
+.env.production
+.env.development
+
+# ----------------------------------
+# VIRTUAL ENVIRONMENTS
+# ----------------------------------
 .venv/
 venv/
 env/
 
+# ----------------------------------
+# PYTHON CACHES
+# ----------------------------------
 __pycache__/
 *.py[cod]
 *.pyo
 
+# ----------------------------------
+# TESTING & CACHING
+# ----------------------------------
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
 htmlcov/
 
+# ----------------------------------
+# IDEs & OS FILES
+# ----------------------------------
 .idea/
 .vscode/
 .DS_Store
 
+# ----------------------------------
+# LOGS & DATABASES
+# ----------------------------------
 *.log
+*.sqlite3
 
-# Ignore Python cache files
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
- 
-# Ignore virtual environment directories
-.venv/
-myenv/
- 
-#alembic/versions
- 
- 
-# Ignore environment variables file
-# .env
+# ----------------------------------
+# ALEMBIC (Client will setup from scratch via README)
+# ----------------------------------
+alembic/
+alembic.ini

@@ -1,3 +1,8 @@
+"""
+Client service layer for managing tenant/client organizations.
+All operations are restricted to super_admin users only.
+"""
+
 from math import ceil
 
 from fastapi import HTTPException
@@ -14,6 +19,7 @@ def create_client_service(
     data: CreateClientRequest,
     current_user: dict,
 ) -> dict:
+    """Create a new client organization. Duplicate client_id values are rejected."""
     try:
         _ensure_super_admin_db_access(current_user)
 
@@ -48,18 +54,22 @@ def get_clients_service(
     search: str = None,
     status: str = None,
 ) -> dict:
+    """
+    Fetch a paginated list of all clients (active, inactive, and deleted).
+    Supports optional filtering by status and name search.
+    """
     try:
         _ensure_super_admin_db_access(current_user)
         limit = 10
         normalized_page = max(page or 1, 1)
 
-        scoped_query = db.query(Client).filter(Client.is_deleted.is_(False))
+        # No default filter - shows all clients including deleted ones
+        scoped_query = db.query(Client)
         
+        # Only apply status filter when explicitly requested
         if status:
             is_active = True if status.lower() == "active" else False
             scoped_query = scoped_query.filter(Client.is_active.is_(is_active))
-        else:
-            scoped_query = scoped_query.filter(Client.is_active.is_(True))
         
         if search:
             scoped_query = scoped_query.filter(Client.name.ilike(f"%{search}%"))
@@ -100,6 +110,10 @@ def update_client_service(
     data: UpdateClientRequest,
     current_user: dict,
 ) -> dict:
+    """
+    Update a client's name.
+    Supports lookup by both numeric DB id and string client_id for flexibility.
+    """
     try:
         _ensure_super_admin_db_access(current_user)
 
@@ -107,6 +121,7 @@ def update_client_service(
         if not name:
             raise HTTPException(status_code=400, detail="Client name is required")
 
+        # Allow lookup by numeric ID or string client_id
         if isinstance(client_id, int) or (isinstance(client_id, str) and client_id.isdigit()):
             client_id_as_int = int(client_id)
             filter_condition = or_(
@@ -140,6 +155,10 @@ def delete_client_service(
     client_id: str,
     current_user: dict,
 ):
+    """
+    Soft-delete a client by marking it as deleted and inactive.
+    Prevents deletion if any active users are still associated with the client.
+    """
     try:
         _ensure_super_admin_db_access(current_user)
 
@@ -152,6 +171,7 @@ def delete_client_service(
         else:
             filter_condition = Client.client_id == str(client_id)
 
+        # Only allow deleting clients that are not already deleted
         client = (
             db.query(Client)
             .filter(
@@ -163,6 +183,7 @@ def delete_client_service(
         if not client:
             raise HTTPException(status_code=404, detail="Client not found")
 
+        # Block deletion if there are active users under this client
         associated_user = (
             db.query(User)
             .filter(

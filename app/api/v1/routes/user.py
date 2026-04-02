@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user
@@ -13,14 +13,16 @@ from app.services.user_service import (
     get_users_service,
 )
 from app.utils.helpers import success_response
+from app.core.rate_limit import limiter
 
 router = APIRouter(prefix="/api/v1", tags=["User"])
 
 
 @router.get("/me")
-def get_me(current_user: dict = Depends(get_current_user)):
+@limiter.limit("60/minute")
+def get_me(request: Request, current_user: dict = Depends(get_current_user)):
     return success_response(
-        "User verified ✅",
+        "User verified",
         {
             "db_user": current_user["db_user"],
             "db_role": current_user["db_user"]["role"],
@@ -30,17 +32,21 @@ def get_me(current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/create-user")
+@limiter.limit("10/minute")
 def create_user(
+    request: Request,
     data: CreateUserRequest,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     create_user_service(db, data, current_user)
-    return success_response("User created successfully", {})
+    return success_response("User created successfully", {}, status_code=201)
 
 
 @router.get("/users")
+@limiter.limit("100/minute")
 def get_users(
+    request: Request,
     page: int = Query(1, ge=1),
     search: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
@@ -54,13 +60,16 @@ def get_users(
 
 
 @router.get("/roles")
-def get_roles_auth0(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+@limiter.limit("100/minute")
+def get_roles_auth0(request: Request, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     roles = get_roles_service(current_user, db)
     return success_response("Roles fetched successfully", roles)
 
 
 @router.delete("/users/{auth0_id}")
+@limiter.limit("20/minute")
 def delete_user(
+    request: Request,
     auth0_id: str,
     current_user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),

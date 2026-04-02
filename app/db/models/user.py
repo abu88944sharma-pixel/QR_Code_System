@@ -1,3 +1,5 @@
+"""User model - represents authenticated users linked to Auth0."""
+
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -10,7 +12,7 @@ class User(CommonMixin, Base):
     auth0_id = Column(String, unique=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True)
-    created_by = Column(String, nullable=True, index=True)
+    created_by = Column(String, nullable=True, index=True)  # auth0_id of the user who created this account
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=True, index=True)
     client_id = Column(Integer, ForeignKey("clients.id"), nullable=True, index=True)
 

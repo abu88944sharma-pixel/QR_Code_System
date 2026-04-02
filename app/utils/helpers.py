@@ -1,3 +1,9 @@
+"""
+Standardized API response helpers and generic utility functions.
+All API endpoints use success_response() and error_response() to maintain
+a consistent {status, message, data} response format across the application.
+"""
+
 from math import ceil
 from typing import Any, Iterable, Mapping
 
@@ -6,6 +12,7 @@ from fastapi.responses import JSONResponse
 
 
 def success_response(message: str, data: Any = None, status_code: int = 200) -> JSONResponse:
+    """Return a standard success response with status=True."""
     return JSONResponse(
         status_code=status_code,
         content=jsonable_encoder(
@@ -19,6 +26,7 @@ def success_response(message: str, data: Any = None, status_code: int = 200) -> 
 
 
 def error_response(message: str, status_code: int = 400, data: Any = None) -> JSONResponse:
+    """Return a standard error response with status=False."""
     return JSONResponse(
         status_code=status_code,
         content=jsonable_encoder(
@@ -32,6 +40,7 @@ def error_response(message: str, status_code: int = 400, data: Any = None) -> JS
 
 
 def paginate_items(items: Iterable[Any], page: int = 1, limit: int = 10) -> dict:
+    """Generic in-memory pagination for any list of items."""
     normalized_page = max(page or 1, 1)
     normalized_limit = max(limit or 10, 1)
     items_list = list(items)
@@ -51,6 +60,7 @@ def paginate_items(items: Iterable[Any], page: int = 1, limit: int = 10) -> dict
 
 
 def search_items(items: Iterable[Any], search_term: str | None, fields: list[str]) -> list[Any]:
+    """Filter items by checking if the search term appears in any of the specified fields."""
     items_list = list(items)
     if not search_term:
         return items_list
@@ -70,6 +80,7 @@ def search_items(items: Iterable[Any], search_term: str | None, fields: list[str
 
 
 def filter_items(items: Iterable[Any], filters: dict[str, Any] | None) -> list[Any]:
+    """Filter items by exact match on the given key-value pairs. Ignores None/empty values."""
     items_list = list(items)
     if not filters:
         return items_list
@@ -91,6 +102,7 @@ def filter_items(items: Iterable[Any], filters: dict[str, Any] | None) -> list[A
 
 
 def _get_item_value(item: Any, field: str) -> Any:
+    """Get a field value from either a dict-like or object-like item."""
     if isinstance(item, Mapping):
         return item.get(field)
 
